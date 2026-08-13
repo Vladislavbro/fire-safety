@@ -293,7 +293,14 @@ footer .ftlist p{padding:5px 0}
   .case dd{margin-bottom:9px}
   .form-hd{padding:22px 22px 20px}
   .form-bd{padding:20px 22px 26px}
-  .card{padding:30px 24px}
+  .card{padding:30px 0}
+  /* таблицы вписываются в экран без горизонтальной прокрутки */
+  table{table-layout:fixed}
+  table th,table td{padding:12px 8px;font-size:14px;line-height:1.35;
+    overflow-wrap:break-word;hyphens:auto}
+  table th{font-size:10px;letter-spacing:.06em}
+  table th:first-child,table td:first-child{padding-left:10px}
+  .price-cell{font-size:15px;white-space:normal}
   .sticky-cta{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:60;
     background:var(--graphite);border-top:1px solid rgba(255,255,255,.15);padding:10px;gap:10px}
   .sticky-cta a{flex:1;text-align:center;padding:15px 8px;font-size:14px;font-weight:800;
