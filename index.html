@@ -207,7 +207,8 @@ section{position:relative}
 .trg{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:clamp(32px,5vw,72px);align-items:start}
 @media (max-width:900px){.trg{grid-template-columns:1fr}}
 .trg-l{position:sticky;top:110px;display:grid;gap:26px}
-@media (max-width:900px){.trg-l{position:static}}
+/* на мобильном штраф и кнопка идут после списка причин */
+@media (max-width:900px){.trg-l{display:contents}.trg{row-gap:26px}.trg-l h2{order:1}.trg-list{order:2}.trg .fine{order:3}.trg-l .btn{order:4}}
 .fine{background:rgba(0,0,0,.3);padding:26px 28px;clip-path:polygon(0 0,calc(100% - 26px) 0,100% 26px,100% 100%,0 100%)}
 .fine small{display:block;font-size:14px;opacity:.8}
 .fine b{display:block;font:400 clamp(40px,5vw,60px)/1 var(--display);color:var(--flame-hot);margin-block:8px}
