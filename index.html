@@ -290,12 +290,13 @@ section{position:relative}
 @media (max-width:900px){.proc-l{position:static}}
 .proc-ex{padding:18px 20px;background:var(--bg-2);border:1px solid var(--line);font-size:15px;color:var(--muted)}
 .proc-ex b{color:var(--paint)}
-/* --c: центр ромбика от верха пункта (top 4px + половина 21px); --len: от первого ромбика до последнего, считается в JS */
-.tl{--p:0;--c:14.5px;--len:calc(100% - 29px);position:relative;list-style:none;margin:0;padding:0 0 0 44px}
-.tl::before,.tl::after{content:"";position:absolute;left:11px;top:var(--c);width:3px}
-.tl::before{height:var(--len);background:var(--line)}
-.tl::after{height:calc(var(--len) * var(--p));background:linear-gradient(180deg,var(--flame-hot),var(--flame),var(--ember));box-shadow:0 0 14px rgba(255,120,30,.6)}
-.tl-spark{position:absolute;left:12.5px;top:calc(var(--c) + var(--len) * var(--p));width:18px;height:18px;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,#fff 0 20%,var(--flame-hot) 35%,rgba(255,154,31,0) 70%);animation:spark .25s infinite alternate;z-index:2}
+/* --c: центр первого ромбика, --len: от первого ромбика до последнего; считаются в JS только при изменении размеров.
+   При прокрутке меняются только transform у .tl-fill и translate у .tl-spark, без пересчёта раскладки */
+.tl{--c:14.5px;--len:calc(100% - 29px);position:relative;list-style:none;margin:0;padding:0 0 0 44px}
+.tl::before,.tl-fill{content:"";position:absolute;left:11px;top:var(--c);width:3px;height:var(--len)}
+.tl::before{background:var(--line)}
+.tl-fill{background:linear-gradient(180deg,var(--flame-hot),var(--flame),var(--ember));box-shadow:0 0 14px rgba(255,120,30,.6);transform-origin:top;transform:scaleY(0);will-change:transform}
+.tl-spark{position:absolute;left:12.5px;top:var(--c);will-change:transform,translate;width:18px;height:18px;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,#fff 0 20%,var(--flame-hot) 35%,rgba(255,154,31,0) 70%);animation:spark .25s infinite alternate;z-index:2}
 @keyframes spark{to{transform:translate(-50%,-50%) scale(1.35)}}
 .tl li{position:relative;padding-bottom:34px}
 .tl li:last-child{padding-bottom:0}
@@ -573,7 +574,7 @@ footer{background:#0B0F13;padding-block:56px calc(40px + env(safe-area-inset-bot
 
     <div class="quiz">
       <div class="qbox">
-        <div class="qprog"><span id="qLabel">Вопрос 1 из 5</span><span id="qHint">Что нужно защитить?</span></div>
+        <div class="qprog"><span id="qLabel">Вопрос 1 из 5</span></div>
         <div class="qbar"><i id="qBar"></i></div>
         <div class="qsteps" id="qSteps">
           <div class="qstep on" data-step="0">
@@ -636,7 +637,7 @@ footer{background:#0B0F13;padding-block:56px calc(40px + env(safe-area-inset-bot
         <div class="est-sum" id="eRange"><div><span>от</span><b class="tnum" id="eLo">61 000 ₽</b></div><div id="eHiBox"><span>до</span><b class="tnum" id="eHi">84 000 ₽</b></div></div>
         <div class="est-rows">
           <div class="est-row"><span>Цена за м²</span><b class="tnum" id="eRate">690 ₽</b></div>
-          <div class="est-row"><span>Конструкции</span><b id="eType">Металлоконструкции</b></div>
+          <div class="est-row"><span>Конструкции</span><b id="eType">Металл</b></div>
           <div class="est-row"><span>Площадь</span><b class="tnum" id="eArea">100 м² (пример)</b></div>
           <div class="est-row"><span>Требование</span><b id="eR">R45</b></div>
           <div class="est-row"><span>Срок работ</span><b class="tnum" id="eDays">около 3 дней</b></div>
@@ -655,7 +656,7 @@ footer{background:#0B0F13;padding-block:56px calc(40px + env(safe-area-inset-bot
       <div class="proc-ex">Пример: склад <b>1 200 м²</b>, металл <b>R45</b>. От замера до сдачи документов прошло <b>9 дней</b>.</div>
     </div>
     <ol class="tl" id="tl">
-      <span class="tl-spark" aria-hidden="true"></span>
+      <span class="tl-fill" aria-hidden="true"></span><span class="tl-spark" aria-hidden="true"></span>
       <li><p class="when">Через 15 минут</p><h3>Перезваниваем и уточняем задачу</h3><p>Спросим про объект, проект и сроки. Если есть проект или фото, посчитаем предварительно по ним.</p></li>
       <li><p class="when">День 1</p><h3>Инженер выезжает на объект</h3><p>Замеряет площади и толщину старого покрытия. Выезд бесплатный по СПб и ЛО в пределах 50 км от КАД.</p></li>
       <li><p class="when">День 2</p><h3>Смета и договор</h3><p>Цену фиксируем в договоре. Подбираем сертифицированный состав под нужный предел огнестойкости.</p></li>
@@ -966,17 +967,28 @@ $$('.cmp').forEach(c => {
 });
 
 /* ---------- Timeline fuse ---------- */
-const tl = $('#tl'), tlItems = $$('#tl li');
-const onScroll = () => {
-  const r = tl.getBoundingClientRect(), vh = innerHeight;
-  const first = tlItems[0].offsetTop, c = first + 14.5, len = tlItems[tlItems.length - 1].offsetTop - first;
-  tl.style.setProperty('--c', c + 'px'); tl.style.setProperty('--len', len + 'px');
-  const p = clamp((vh * .6 - r.top - c) / len, 0, 1);
-  tl.style.setProperty('--p', p.toFixed(4));
-  tlItems.forEach(li => li.classList.toggle('lit', li.offsetTop - first <= p * len + 1));
-  $('#mbar').classList.toggle('show', scrollY > 500);
+const tl = $('#tl'), tlItems = $$('#tl li'), tlFill = $('.tl-fill', tl), tlSpark = $('.tl-spark', tl), mbar = $('#mbar');
+let tlC = 14.5, tlLen = 1, tlStops = [], tlLit = [], mbarShown = null, ticking = false;
+/* геометрия меняется только при ресайзе/догрузке шрифтов, а не при прокрутке */
+const measureTl = () => {
+  const first = tlItems[0].offsetTop;
+  tlC = first + 14.5; tlLen = Math.max(1, tlItems[tlItems.length - 1].offsetTop - first);
+  tlStops = tlItems.map(li => li.offsetTop - first);
+  tl.style.setProperty('--c', tlC + 'px'); tl.style.setProperty('--len', tlLen + 'px');
 };
-addEventListener('scroll', onScroll, { passive: true }); addEventListener('resize', onScroll); onScroll();
+const onScroll = () => {
+  ticking = false;
+  const p = clamp((innerHeight * .6 - tl.getBoundingClientRect().top - tlC) / tlLen, 0, 1);
+  tlFill.style.transform = `scaleY(${p.toFixed(4)})`;
+  tlSpark.style.translate = `0 ${(p * tlLen).toFixed(1)}px`;
+  tlStops.forEach((y, i) => { const on = y <= p * tlLen + 1; if (on !== tlLit[i]) { tlLit[i] = on; tlItems[i].classList.toggle('lit', on); } });
+  const show = scrollY > 500; if (show !== mbarShown) { mbarShown = show; mbar.classList.toggle('show', show); }
+};
+const requestTl = () => { if (!ticking) { ticking = true; requestAnimationFrame(onScroll); } };
+const relayoutTl = () => { measureTl(); onScroll(); };
+addEventListener('scroll', requestTl, { passive: true });
+if ('ResizeObserver' in window) new ResizeObserver(relayoutTl).observe(tl); else addEventListener('resize', relayoutTl);
+relayoutTl();
 
 /* hero glow follows cursor */
 const hero = $('.hero');
@@ -1000,7 +1012,7 @@ $$('.js-form').forEach(f => f.addEventListener('submit', e => {
 
 /* ---------- Quiz ---------- */
 const TYPES = [
-  ['metal', 'Металлоконструкции', 'metal'], ['wood', 'Дерево', 'wood'], ['duct', 'Воздуховоды', 'duct'],
+  ['metal', 'Металл', 'metal'], ['wood', 'Дерево', 'wood'], ['duct', 'Воздуховоды', 'duct'],
   ['cable', 'Кабельные линии', 'cable'], ['fabric', 'Ткани и декорации', 'fabric'], ['mix', 'Несколько видов', 'mix'],
 ];
 const RSETS = {
@@ -1014,7 +1026,6 @@ const RSETS = {
 const MIN_ORDER = { metal: 30000, wood: 15000, duct: 30000, cable: 20000, fabric: 10000, mix: 30000 };
 const DAYS_PER = { metal: 250, wood: 900, duct: 120, cable: 200, fabric: 1200, mix: 200 };
 const S = { type: 'metal', area: 100, areaSet: false, r: 1, obj: 'Склад', when: 'В течение месяца', msg: 'Telegram', step: 0 };
-const HINTS = ['Что нужно защитить?', 'Площадь', 'Требование', 'Объект и сроки', 'Контакты', 'Готово'];
 
 const renderTypes = () => $('#qType').innerHTML = TYPES.map(([k, t, ic]) => `<button type="button" class="opt${S.type === k ? ' sel' : ''}" data-k="${k}">${icon(ic)}${t}</button>`).join('');
 const renderR = () => {
@@ -1066,7 +1077,6 @@ const goStep = (n, back) => {
   $$('.qstep').forEach(s => { const on = +s.dataset.step === n; s.classList.toggle('on', on); s.classList.toggle('back', on && !!back); });
   $('#qBar').style.setProperty('--p', `${Math.min(100, (n + 1) * 20)}%`);
   $('#qLabel').textContent = n < 5 ? `Вопрос ${n + 1} из 5` : 'Готово';
-  $('#qHint').textContent = HINTS[n];
   $('#qBack').disabled = n === 0 || n === 5;
   $('#qNav').hidden = n >= 4;
 };
@@ -1346,7 +1356,7 @@ function draw(now) {
 }
 function loop(now) {
   requestAnimationFrame(loop);
-  const dt = Math.min(.05, (now - last) / 1000); last = now;
+  const dt = clamp((now - last) / 1000, 0, .05); last = now;
   if (!visible.get($('#ft'))) return;
   const M = MODE[mode];
   if (simT < M.end) simT = Math.min(M.end, simT + dt * M.rate);
