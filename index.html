@@ -220,7 +220,7 @@ section{position:relative}
 .trg-list p{margin-top:6px;opacity:.85}
 
 /* quiz */
-.quiz{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:18px;align-items:start}
+.quiz{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:18px;align-items:stretch}
 @media (max-width:940px){.quiz{grid-template-columns:1fr}}
 .quiz>*{min-width:0}
 .qbox{background:var(--bg-2);border:1px solid var(--line);padding:clamp(20px,3vw,34px);min-height:470px;display:flex;flex-direction:column}
@@ -264,22 +264,21 @@ section{position:relative}
 .qdone{text-align:left;display:grid;gap:14px;align-content:center;flex:1}
 .qdone .big{font:400 clamp(30px,4vw,46px)/1.05 var(--display)}
 
-.est{position:sticky;top:96px;padding:clamp(22px,3vw,32px);background:linear-gradient(170deg,#2A150D,#150F0C 55%,#10151B);border:1px solid #4a2a1c;overflow:hidden}
+.est{display:flex;flex-direction:column;padding:clamp(22px,3vw,32px);background:linear-gradient(170deg,#2A150D,#150F0C 55%,#10151B);border:1px solid #4a2a1c;overflow:hidden}
 .est::before{content:"";position:absolute;inset:auto -30% -60% -30%;height:120%;background:radial-gradient(closest-side,rgba(255,84,36,.35),transparent);animation:breathe 4s ease-in-out infinite;pointer-events:none}
 @keyframes breathe{50%{transform:scale(1.12);opacity:.7}}
 .est>*{position:relative}
 .est .label{color:var(--flame-hot)}
-.est-rate{margin-top:18px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
-.est-rate b{font:400 clamp(44px,5vw,64px)/1 var(--display);color:var(--flame-hot)}
-.est-rate span{color:var(--muted)}
-.est-rows{margin-top:22px;display:grid;gap:0}
+.est-sum{margin-top:16px;display:grid;gap:6px}
+.est-sum>div{display:flex;align-items:baseline;gap:12px}
+.est-sum span{flex:0 0 1.7em;color:var(--muted);font-size:16px}
+.est-sum [hidden]{display:none}
+.est-note{margin-top:auto;padding-top:18px;font-size:13px;color:var(--muted-2)}
+.est-sum b{font:400 clamp(30px,4.2vw,52px)/1.05 var(--display);color:var(--flame-hot);white-space:nowrap;letter-spacing:-.01em}
+.est-rows{margin-top:26px;display:grid;gap:0}
 .est-row{display:flex;justify-content:space-between;gap:16px;padding:12px 0;border-top:1px solid rgba(255,255,255,.1)}
 .est-row span{color:var(--muted)}
 .est-row b{text-align:right}
-.est-total{margin-top:6px;padding:16px;background:rgba(0,0,0,.3)}
-.est-total small{color:var(--muted);font-size:13px}
-.est-total b{display:block;font:400 clamp(22px,2.4vw,28px)/1.15 var(--display);margin-top:4px}
-.est-note{margin-top:14px;font-size:13px;color:var(--muted-2)}
 
 /* process */
 .proc{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:clamp(32px,5vw,80px)}
@@ -288,15 +287,16 @@ section{position:relative}
 @media (max-width:900px){.proc-l{position:static}}
 .proc-ex{padding:18px 20px;background:var(--bg-2);border:1px solid var(--line);font-size:15px;color:var(--muted)}
 .proc-ex b{color:var(--paint)}
-.tl{--p:0;position:relative;list-style:none;margin:0;padding:0 0 0 44px}
-.tl::before,.tl::after{content:"";position:absolute;left:11px;top:8px;width:3px}
-.tl::before{bottom:8px;background:var(--line)}
-.tl::after{height:calc((100% - 16px) * var(--p));background:linear-gradient(180deg,var(--flame-hot),var(--flame),var(--ember));box-shadow:0 0 14px rgba(255,120,30,.6)}
-.tl-spark{position:absolute;left:12.5px;top:calc(8px + (100% - 16px) * var(--p));width:18px;height:18px;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,#fff 0 20%,var(--flame-hot) 35%,rgba(255,154,31,0) 70%);animation:spark .25s infinite alternate;z-index:2}
+/* --c: центр ромбика от верха пункта (top 4px + половина 21px); --len: от первого ромбика до последнего, считается в JS */
+.tl{--p:0;--c:14.5px;--len:calc(100% - 29px);position:relative;list-style:none;margin:0;padding:0 0 0 44px}
+.tl::before,.tl::after{content:"";position:absolute;left:11px;top:var(--c);width:3px}
+.tl::before{height:var(--len);background:var(--line)}
+.tl::after{height:calc(var(--len) * var(--p));background:linear-gradient(180deg,var(--flame-hot),var(--flame),var(--ember));box-shadow:0 0 14px rgba(255,120,30,.6)}
+.tl-spark{position:absolute;left:12.5px;top:calc(var(--c) + var(--len) * var(--p));width:18px;height:18px;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,#fff 0 20%,var(--flame-hot) 35%,rgba(255,154,31,0) 70%);animation:spark .25s infinite alternate;z-index:2}
 @keyframes spark{to{transform:translate(-50%,-50%) scale(1.35)}}
 .tl li{position:relative;padding-bottom:34px}
 .tl li:last-child{padding-bottom:0}
-.tl li::before{content:"";position:absolute;left:-39px;top:4px;width:15px;height:15px;background:var(--bg);border:3px solid var(--line-2);transform:rotate(45deg);transition:all .4s var(--ease)}
+.tl li::before{content:"";position:absolute;left:-42px;top:4px;width:15px;height:15px;background:var(--bg);border:3px solid var(--line-2);transform:rotate(45deg);transition:all .4s var(--ease)}
 .tl li.lit::before{background:var(--flame);border-color:var(--flame-hot);box-shadow:0 0 16px var(--flame)}
 .tl .when{font:600 13px/1 var(--body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted-2);transition:color .4s}
 .tl li.lit .when{color:var(--flame)}
@@ -581,8 +581,8 @@ footer{background:#0B0F13;padding-block:56px calc(40px + env(safe-area-inset-bot
           </div>
           <div class="qstep" data-step="1">
             <h3>Какая примерно площадь?</h3>
-            <div class="area-big tnum"><span id="areaVal">500</span> <small>м²</small></div>
-            <input class="range" id="area" type="range" min="0" max="100" value="55" aria-label="Площадь, м²">
+            <div class="area-big tnum"><span id="areaVal">100</span> <small>м²</small></div>
+            <input class="range" id="area" type="range" min="0" max="100" value="26" aria-label="Площадь, м²">
             <div class="chips" id="areaChips">
               <button type="button" class="chip" data-a="100">до 100 м²</button>
               <button type="button" class="chip" data-a="500">500 м²</button>
@@ -632,15 +632,14 @@ footer{background:#0B0F13;padding-block:56px calc(40px + env(safe-area-inset-bot
 
       <aside class="est" aria-live="polite">
         <p class="label">Предварительный расчёт</p>
-        <div class="est-rate"><b class="tnum" id="eRate">690</b><span>₽ за м²</span></div>
+        <div class="est-sum" id="eRange"><div><span>от</span><b class="tnum" id="eLo">61 000 ₽</b></div><div id="eHiBox"><span>до</span><b class="tnum" id="eHi">84 000 ₽</b></div></div>
         <div class="est-rows">
+          <div class="est-row"><span>Цена за м²</span><b class="tnum" id="eRate">690 ₽</b></div>
           <div class="est-row"><span>Конструкции</span><b id="eType">Металлоконструкции</b></div>
-          <div class="est-row"><span>Площадь</span><b class="tnum" id="eArea">500 м²</b></div>
-          <div class="est-row"><span>Требование</span><b id="eR">R45</b></div>
-          <div class="est-row"><span>Срок работ</span><b class="tnum" id="eDays">около 5 дней</b></div>
+          <div class="est-row"><span>Площадь</span><b class="tnum" id="eArea">100 м² (пример)</b></div>
+          <div class="est-row"><span>Срок работ</span><b class="tnum" id="eDays">около 3 дней</b></div>
         </div>
-        <div class="est-total"><small>Стоимость под ключ</small><b class="tnum" id="eTotal">от 290 000 до 410 000 ₽</b></div>
-        <p class="est-note">Расчёт ориентировочный. После замера цену фиксируем в договоре.</p>
+        <p class="est-note">Точную стоимость инженер назовёт после бесплатного замера.</p>
       </aside>
     </div>
   </div>
@@ -920,7 +919,7 @@ const FAQ = [
   ['Нужен ли проект огнезащиты?', 'Для металла с требуемым пределом R45 и выше проект обычно нужен. Если его нет, наш инженер рассчитает толщину покрытия и подготовит проект.'],
   ['Придётся останавливать работу склада или цеха?', 'Нет. Работаем посекционно, ночью и в выходные, заранее согласуем график с вашей службой эксплуатации.'],
   ['Можно работать с нашим материалом?', 'Да. В этом случае вы платите только за работу, а мы проверяем сертификаты на состав до начала нанесения.'],
-  ['Какой минимальный заказ?', 'От 30 000 ₽ или от 50 м² для металла. Проверка качества огнезащиты доступна для объекта любой площади.'],
+  ['Какой минимальный заказ?', 'Для металла и воздуховодов от 30 000 ₽, для кабельных линий от 20 000 ₽, для дерева от 15 000 ₽, для тканей от 10 000 ₽. Проверка качества огнезащиты доступна для объекта любой площади.'],
   ['Выезжаете в Ленинградскую область?', 'Да, работаем по всей области. В пределах 50 км от КАД выезд инженера бесплатный.'],
 ];
 $('#faq').innerHTML = FAQ.map(([q, a], i) => `
@@ -969,12 +968,14 @@ $$('.cmp').forEach(c => {
 const tl = $('#tl'), tlItems = $$('#tl li');
 const onScroll = () => {
   const r = tl.getBoundingClientRect(), vh = innerHeight;
-  const p = clamp((vh * .6 - r.top) / r.height, 0, 1);
+  const first = tlItems[0].offsetTop, c = first + 14.5, len = tlItems[tlItems.length - 1].offsetTop - first;
+  tl.style.setProperty('--c', c + 'px'); tl.style.setProperty('--len', len + 'px');
+  const p = clamp((vh * .6 - r.top - c) / len, 0, 1);
   tl.style.setProperty('--p', p.toFixed(4));
-  tlItems.forEach(li => li.classList.toggle('lit', li.offsetTop <= p * r.height + 4));
+  tlItems.forEach(li => li.classList.toggle('lit', li.offsetTop - first <= p * len + 1));
   $('#mbar').classList.toggle('show', scrollY > 500);
 };
-addEventListener('scroll', onScroll, { passive: true }); onScroll();
+addEventListener('scroll', onScroll, { passive: true }); addEventListener('resize', onScroll); onScroll();
 
 /* hero glow follows cursor */
 const hero = $('.hero');
@@ -1009,8 +1010,9 @@ const RSETS = {
   fabric:{ title: 'Что нужно обработать?', o: [['Шторы и ткани', 60], ['Ковровые покрытия', 80], ['Декорации', 110], ['Всё сразу', 85]] },
   mix:   { title: 'Какой предел огнестойкости нужен?', o: [['R15–R45', 600], ['R60–R90', 1000], ['R120 и выше', 1500], ['Не знаю', 800, 'подскажет инженер']] },
 };
+const MIN_ORDER = { metal: 30000, wood: 15000, duct: 30000, cable: 20000, fabric: 10000, mix: 30000 };
 const DAYS_PER = { metal: 250, wood: 900, duct: 120, cable: 200, fabric: 1200, mix: 200 };
-const S = { type: 'metal', area: 500, r: 1, obj: 'Склад', when: 'В течение месяца', msg: 'Telegram', step: 0 };
+const S = { type: 'metal', area: 100, areaSet: false, r: 1, obj: 'Склад', when: 'В течение месяца', msg: 'Telegram', step: 0 };
 const HINTS = ['Что нужно защитить?', 'Площадь', 'Требование', 'Объект и сроки', 'Контакты', 'Готово'];
 
 const renderTypes = () => $('#qType').innerHTML = TYPES.map(([k, t, ic]) => `<button type="button" class="opt${S.type === k ? ' sel' : ''}" data-k="${k}">${icon(ic)}${t}</button>`).join('');
@@ -1037,20 +1039,23 @@ const setArea = (a, fromSlider) => {
   $$('#areaChips .chip').forEach(c => c.classList.toggle('sel', +c.dataset.a === a));
   estimate();
 };
-$('#area').addEventListener('input', e => setArea(areaFromV(+e.target.value), true));
-$('#areaChips').addEventListener('click', e => { const b = e.target.closest('.chip'); if (b) setArea(+b.dataset.a); });
+$('#area').addEventListener('input', e => { S.areaSet = true; setArea(areaFromV(+e.target.value), true); });
+$('#areaChips').addEventListener('click', e => { const b = e.target.closest('.chip'); if (b) { S.areaSet = true; setArea(+b.dataset.a); } });
 
 const plural = (n, a, b, c) => { n = Math.abs(n) % 100; const n1 = n % 10; if (n > 10 && n < 20) return c; if (n1 > 1 && n1 < 5) return b; if (n1 === 1) return a; return c; };
 const estimate = () => {
-  const set = RSETS[S.type], [rName, rate] = set.o[S.r];
-  const total = Math.max(rate * S.area, 30000);
+  const set = RSETS[S.type], [, rate] = set.o[S.r];
+  const total = rate * S.area, min = MIN_ORDER[S.type];
   const lo = Math.round(total * .88 / 1000) * 1000, hi = Math.round(total * 1.22 / 1000) * 1000;
+  const isMin = lo < min;
   const days = Math.max(1, Math.ceil(S.area / DAYS_PER[S.type]) + (S.type === 'metal' || S.type === 'duct' ? 2 : 0));
-  $('#eRate').textContent = fmt(rate);
-  $('#eTotal').textContent = `от ${fmt(lo)} до ${fmt(hi)} ₽`;
+  $('#eRate').textContent = fmt(rate) + ' ₽';
+  $('#eRange span').hidden = isMin;
+  $('#eHiBox').hidden = isMin;
+  $('#eLo').textContent = fmt(isMin ? min : lo) + ' ₽';
+  $('#eHi').textContent = fmt(hi) + ' ₽';
   $('#eType').textContent = TYPES.find(t => t[0] === S.type)[1];
-  $('#eArea').textContent = fmt(S.area) + ' м²';
-  $('#eR').textContent = rName;
+  $('#eArea').textContent = fmt(S.area) + ' м²' + (S.areaSet ? '' : ' (пример)');
   $('#eDays').textContent = `около ${days} ${plural(days, 'дня', 'дней', 'дней')}`;
 };
 
@@ -1075,7 +1080,7 @@ $$('.svc-link').forEach(b => b.addEventListener('click', () => {
   S.type = b.dataset.q; S.r = S.type === 'metal' ? 1 : 0; renderTypes(); renderR(); estimate(); goStep(1);
   $('#calc').scrollIntoView({ behavior: RM ? 'auto' : 'smooth' });
 }));
-renderTypes(); renderR(); setArea(500); goStep(0);
+renderTypes(); renderR(); setArea(100); goStep(0);
 
 /* ---------- Canvas helpers ---------- */
 const fitCanvas = cv => {
