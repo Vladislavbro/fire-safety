@@ -478,7 +478,9 @@ footer{background:#0B0F13;padding-block:56px calc(40px + env(safe-area-inset-bot
 }
 
 /* бесконечные декоративные анимации стоят на паузе, пока их блок за пределами экрана (класс .idle ставит JS) */
-.idle .ticker-in,.proof-wrap.idle .proof,.qbar.idle i::after,.est.idle::before,.tl.idle .tl-spark::before{animation-play-state:paused}
+.idle .ticker-in,.proof-wrap.idle .proof,.qbar.idle i::after,.est.idle::before{animation-play-state:paused}
+/* блок #tl сюда не входит: смена класса на элементе с view-timeline заставляет Safari пересобрать
+   анимации линии и огонька, и они дёргаются в момент входа блока в экран и выхода из него */
 
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
@@ -1152,7 +1154,7 @@ const FRAME_MS = 15;
 /* ---------- Pause offscreen CSS loops ---------- */
 if ('IntersectionObserver' in window) {
   const idleIO = new IntersectionObserver(es => es.forEach(e => e.target.classList.toggle('idle', !e.isIntersecting)));
-  $$('.ticker-clip, .proof-wrap, .qbar, .est, #tl').forEach(el => idleIO.observe(el));
+  $$('.ticker-clip, .proof-wrap, .qbar, .est').forEach(el => idleIO.observe(el));
 }
 
 /* ---------- Ambient embers ---------- */
