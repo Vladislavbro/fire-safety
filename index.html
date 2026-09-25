@@ -294,13 +294,17 @@ section{position:relative}
 .proc-ex{padding:18px 20px;background:var(--bg-2);border:1px solid var(--line);font-size:15px;color:var(--muted)}
 .proc-ex b{color:var(--paint)}
 /* --c: центр первого ромбика, --len: от первого ромбика до последнего; считаются в JS только при изменении размеров.
-   При прокрутке меняются только transform у .tl-fill и translate у .tl-spark, без пересчёта раскладки */
+   При прокрутке меняется только transform у .tl-fill и .tl-spark, без пересчёта раскладки.
+   .tl-spark устроен как .tl-fill: блок высотой --len с одной анимацией transform без var() в keyframes
+   (сдвиг на 100% своей высоты), поэтому браузер ведёт их одинаково, в потоке прокрутки.
+   Пульсация огонька вынесена на ::before, чтобы не смешивать на одном элементе анимацию по времени и по прокрутке */
 .tl{--c:14.5px;--len:calc(100% - 29px);position:relative;list-style:none;margin:0;padding:0 0 0 44px}
 .tl::before,.tl-fill{content:"";position:absolute;left:11px;top:var(--c);width:3px;height:var(--len)}
 .tl::before{background:var(--line)}
 .tl-fill{background:linear-gradient(180deg,var(--flame-hot),var(--flame),var(--ember));box-shadow:0 0 14px rgba(255,120,30,.6);transform-origin:top;transform:scaleY(0);will-change:transform}
-.tl-spark{position:absolute;left:12.5px;top:var(--c);will-change:transform,translate;width:18px;height:18px;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,#fff 0 20%,var(--flame-hot) 35%,rgba(255,154,31,0) 70%);animation:spark .25s infinite alternate;z-index:2}
-@keyframes spark{to{transform:translate(-50%,-50%) scale(1.35)}}
+.tl-spark{position:absolute;left:3.5px;top:var(--c);width:18px;height:var(--len);pointer-events:none;will-change:transform;z-index:2}
+.tl-spark::before{content:"";position:absolute;left:0;top:-9px;width:18px;height:18px;border-radius:50%;background:radial-gradient(circle,#fff 0 20%,var(--flame-hot) 35%,rgba(255,154,31,0) 70%);animation:spark .25s infinite alternate}
+@keyframes spark{to{transform:scale(1.35)}}
 .tl li{position:relative;padding-bottom:34px}
 .tl li:last-child{padding-bottom:0}
 .tl li::before{content:"";position:absolute;left:-42px;top:4px;width:15px;height:15px;background:var(--bg);border:3px solid var(--line-2);transform:rotate(45deg);transition:all .4s var(--ease)}
@@ -315,14 +319,14 @@ section{position:relative}
   .tl{view-timeline:--tl block;view-timeline-inset:0 40%}
   .tl-fill,.tl-spark{animation-timeline:--tl;animation-range:cover var(--c) cover calc(var(--c) + var(--len));animation-fill-mode:both;animation-timing-function:linear}
   .tl-fill{animation-name:tl-grow}
-  .tl-spark{animation:spark .25s infinite alternate,tl-move linear both;animation-timeline:auto,--tl;animation-range:normal,cover var(--c) cover calc(var(--c) + var(--len))}
+  .tl-spark{animation-name:tl-move}
   .tl li{view-timeline:--tl-li block;view-timeline-inset:0 40%}
   .tl li::before,.tl li .when{transition:none;animation:linear both;animation-timeline:--tl-li;animation-range:cover 9.5px cover 15.5px}
   .tl li::before{animation-name:tl-lit}
   .tl li .when{animation-name:tl-lit-when}
 }
 @keyframes tl-grow{from{transform:scaleY(0)}to{transform:scaleY(1)}}
-@keyframes tl-move{from{translate:0 0}to{translate:0 var(--len)}}
+@keyframes tl-move{from{transform:translateY(0)}to{transform:translateY(100%)}}
 @keyframes tl-lit{to{background:var(--flame);border-color:var(--flame-hot);box-shadow:0 0 16px var(--flame)}}
 @keyframes tl-lit-when{to{color:var(--flame)}}
 .tl p{margin-top:6px;color:var(--muted);max-width:560px}
@@ -1004,7 +1008,7 @@ const onScroll = () => {
   if (TL_CSS) return;
   const p = clamp((innerHeight * .6 - tl.getBoundingClientRect().top - tlC) / tlLen, 0, 1);
   tlFill.style.transform = `scaleY(${p.toFixed(4)})`;
-  tlSpark.style.translate = `0 ${(p * tlLen).toFixed(1)}px`;
+  tlSpark.style.transform = `translateY(${(p * 100).toFixed(2)}%)`;
   tlStops.forEach((y, i) => { const on = y <= p * tlLen + 1; if (on !== tlLit[i]) { tlLit[i] = on; tlItems[i].classList.toggle('lit', on); } });
 };
 const requestTl = () => { if (!ticking) { ticking = true; requestAnimationFrame(onScroll); } };
