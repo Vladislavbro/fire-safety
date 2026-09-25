@@ -305,6 +305,23 @@ section{position:relative}
 .tl .when{font:600 13px/1 var(--body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted-2);transition:color .4s}
 .tl li.lit .when{color:var(--flame)}
 .tl h3{margin-top:8px}
+/* Где браузер умеет анимации по прокрутке (Chrome 115+, Safari/iOS 26+), линия, огонёк и ромбики
+   двигаются вместе с прокруткой без JS: нет рывков при инерционной прокрутке на iPhone.
+   Нижняя граница «окна» поднята на 40%, т.е. отсчёт идёт от линии на 60% высоты экрана, как в JS-версии */
+@supports (animation-timeline: view()){
+  .tl{view-timeline:--tl block;view-timeline-inset:0 40%}
+  .tl-fill,.tl-spark{animation-timeline:--tl;animation-range:cover var(--c) cover calc(var(--c) + var(--len));animation-fill-mode:both;animation-timing-function:linear}
+  .tl-fill{animation-name:tl-grow}
+  .tl-spark{animation:spark .25s infinite alternate,tl-move linear both;animation-timeline:auto,--tl;animation-range:normal,cover var(--c) cover calc(var(--c) + var(--len))}
+  .tl li{view-timeline:--tl-li block;view-timeline-inset:0 40%}
+  .tl li::before,.tl li .when{transition:none;animation:linear both;animation-timeline:--tl-li;animation-range:cover 9.5px cover 15.5px}
+  .tl li::before{animation-name:tl-lit}
+  .tl li .when{animation-name:tl-lit-when}
+}
+@keyframes tl-grow{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+@keyframes tl-move{from{translate:0 0}to{translate:0 var(--len)}}
+@keyframes tl-lit{to{background:var(--flame);border-color:var(--flame-hot);box-shadow:0 0 16px var(--flame)}}
+@keyframes tl-lit-when{to{color:var(--flame)}}
 .tl p{margin-top:6px;color:var(--muted);max-width:560px}
 
 /* documents */
@@ -976,13 +993,16 @@ const measureTl = () => {
   tlStops = tlItems.map(li => li.offsetTop - first);
   tl.style.setProperty('--c', tlC + 'px'); tl.style.setProperty('--len', tlLen + 'px');
 };
+/* при поддержке CSS-анимаций по прокрутке линию и ромбики ведёт сам браузер, JS только меряет геометрию */
+const TL_CSS = !!(window.CSS && CSS.supports('animation-timeline', 'view()'));
 const onScroll = () => {
   ticking = false;
+  const show = scrollY > 500; if (show !== mbarShown) { mbarShown = show; mbar.classList.toggle('show', show); }
+  if (TL_CSS) return;
   const p = clamp((innerHeight * .6 - tl.getBoundingClientRect().top - tlC) / tlLen, 0, 1);
   tlFill.style.transform = `scaleY(${p.toFixed(4)})`;
   tlSpark.style.translate = `0 ${(p * tlLen).toFixed(1)}px`;
   tlStops.forEach((y, i) => { const on = y <= p * tlLen + 1; if (on !== tlLit[i]) { tlLit[i] = on; tlItems[i].classList.toggle('lit', on); } });
-  const show = scrollY > 500; if (show !== mbarShown) { mbarShown = show; mbar.classList.toggle('show', show); }
 };
 const requestTl = () => { if (!ticking) { ticking = true; requestAnimationFrame(onScroll); } };
 const relayoutTl = () => { measureTl(); onScroll(); };
