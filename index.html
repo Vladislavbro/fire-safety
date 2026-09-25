@@ -21,6 +21,8 @@ html{scroll-behavior:smooth;scroll-padding-top:84px}
 body{margin:0;background:var(--bg);color:var(--paint);font:400 17px/1.55 var(--body);overflow-x:clip;-webkit-font-smoothing:antialiased}
 h1,h2,h3{font-family:var(--display);font-weight:400;line-height:1.02;letter-spacing:-.005em;text-wrap:balance;margin:0}
 h2{font-size:clamp(34px,5.2vw,68px)}
+/* на узких телефонах длинные слова («субподрядчиков») иначе шире экрана */
+@media (max-width:380px){h2{font-size:30px}}
 h3{font-size:clamp(20px,2vw,24px);line-height:1.15}
 p{margin:0}
 a{color:inherit}
@@ -264,7 +266,7 @@ section{position:relative}
 .qdone{text-align:left;display:grid;gap:14px;align-content:center;flex:1}
 .qdone .big{font:400 clamp(30px,4vw,46px)/1.05 var(--display)}
 
-.est{display:flex;flex-direction:column;padding:clamp(22px,3vw,32px);background:linear-gradient(170deg,#2A150D,#150F0C 55%,#10151B);border:1px solid #4a2a1c;overflow:hidden}
+.est{position:relative;display:flex;flex-direction:column;padding:clamp(22px,3vw,32px);background:linear-gradient(170deg,#2A150D,#150F0C 55%,#10151B);border:1px solid #4a2a1c;overflow:hidden}
 .est::before{content:"";position:absolute;inset:auto -30% -60% -30%;height:120%;background:radial-gradient(closest-side,rgba(255,84,36,.35),transparent);animation:breathe 4s ease-in-out infinite;pointer-events:none}
 @keyframes breathe{50%{transform:scale(1.12);opacity:.7}}
 .est>*{position:relative}
@@ -276,9 +278,9 @@ section{position:relative}
 .est-note{margin-top:auto;padding-top:14px;font-size:13px;color:var(--muted-2)}
 .est-sum b{font:400 clamp(30px,4.2vw,46px)/1.05 var(--display);color:var(--flame-hot);white-space:nowrap;letter-spacing:-.01em}
 .est-rows{margin-top:20px;display:grid;gap:0}
-.est-row{display:flex;justify-content:space-between;gap:16px;padding:8px 0;border-top:1px solid rgba(255,255,255,.1)}
+.est-row{display:flex;flex-wrap:wrap;justify-content:space-between;gap:0 16px;padding:8px 0;border-top:1px solid rgba(255,255,255,.1)}
 .est-row span{color:var(--muted)}
-.est-row b{text-align:right}
+.est-row b{text-align:right;margin-left:auto}
 
 /* process */
 .proc{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:clamp(32px,5vw,80px)}
@@ -517,7 +519,6 @@ footer{background:#0B0F13;padding-block:56px calc(40px + env(safe-area-inset-bot
         <div class="ft-status" id="ftStatus"><i></i><span>Покрытие вспучивается и держит тепло</span></div>
       </div>
       <div class="ft-chart"><canvas id="chart"></canvas></div>
-      <p class="ft-note">Кривая пожара по ГОСТ 30247.0. Сталь теряет несущую способность примерно при 500 °C.</p>
     </div>
   </div>
 </section>
@@ -639,7 +640,6 @@ footer{background:#0B0F13;padding-block:56px calc(40px + env(safe-area-inset-bot
           <div class="est-row"><span>Требование</span><b id="eR">R45</b></div>
           <div class="est-row"><span>Срок работ</span><b class="tnum" id="eDays">около 3 дней</b></div>
         </div>
-        <p class="est-note">Точную стоимость инженер назовёт после бесплатного замера.</p>
       </aside>
     </div>
   </div>
