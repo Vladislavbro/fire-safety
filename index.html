@@ -317,13 +317,16 @@ section{position:relative}
 .tl h3{margin-top:8px}
 /* Где браузер умеет анимации по прокрутке (Chrome 115+, Safari/iOS 26+), линия, огонёк и ромбики
    двигаются вместе с прокруткой без JS: нет рывков при инерционной прокрутке на iPhone.
-   Нижняя граница «окна» поднята на 40%, т.е. отсчёт идёт от линии на 60% высоты экрана, как в JS-версии */
+   Отсчёт идёт от линии на 60% высоты экрана, как в JS-версии. Нижний отступ окна = 100% − 60svh:
+   старт cover = верх элемента − (высота окна − отступ) = верх − 60svh, текущая высота окна сокращается.
+   Раньше было 40%, и на iPhone линия с огоньком дёргались при касании и отпускании: Safari меняет
+   высоту окна (панели), а svh — минимальная высота экрана, она не меняется */
 @supports (animation-timeline: view()){
-  .tl{view-timeline:--tl block;view-timeline-inset:0 40%}
+  .tl{view-timeline:--tl block;view-timeline-inset:0 calc(100% - 60svh)}
   .tl-fill,.tl-spark{animation-timeline:--tl;animation-range:cover var(--c) cover calc(var(--c) + var(--len));animation-fill-mode:both;animation-timing-function:linear}
   .tl-fill{animation-name:tl-grow}
   .tl-spark{animation-name:tl-move}
-  .tl li{view-timeline:--tl-li block;view-timeline-inset:0 40%}
+  .tl li{view-timeline:--tl-li block;view-timeline-inset:0 calc(100% - 60svh)}
   .tl li::before,.tl li .when{transition:none;animation:linear both;animation-timeline:--tl-li;animation-range:cover 9.5px cover 15.5px}
   .tl li::before{animation-name:tl-lit}
   .tl li .when{animation-name:tl-lit-when}
