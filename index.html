@@ -3,10 +3,13 @@
 <meta charset="utf-8">
 <title>Огнезащита Строй Аспект</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Onest:wght@400;500;600;700;800&display=swap">
+<!-- Шрифты лежат рядом с сайтом: без запросов к Google и без блокировки отрисовки.
+     Оставлены только нужные символы (латиница, кириллица, ₽, №, стрелки), Onest — один вариативный файл на 400–800 -->
+<link rel="preload" href="fonts/dela-gothic-one.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/onest.woff2" as="font" type="font/woff2" crossorigin>
 <style>
+@font-face{font-family:"Dela Gothic One";src:url(fonts/dela-gothic-one.woff2) format("woff2");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:"Onest";src:url(fonts/onest.woff2) format("woff2");font-weight:400 800;font-style:normal;font-display:swap}
 :root{
   color-scheme: dark;
   --bg:#10151B; --bg-2:#161D25; --bg-3:#1E2731; --line:#2A3541; --line-2:#364452;
@@ -473,6 +476,9 @@ footer{background:#0B0F13;padding-block:56px calc(40px + env(safe-area-inset-bot
   .mbar .btn{--h:50px;padding:0 10px;font-size:15px;min-width:0;white-space:nowrap}
   footer{padding-bottom:calc(100px + env(safe-area-inset-bottom,0px))}
 }
+
+/* бесконечные декоративные анимации стоят на паузе, пока их блок за пределами экрана (класс .idle ставит JS) */
+.idle .ticker-in,.proof-wrap.idle .proof,.qbar.idle i::after,.est.idle::before,.tl.idle .tl-spark::before{animation-play-state:paused}
 
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
@@ -1131,25 +1137,46 @@ const fitCanvas = cv => {
 const visible = new WeakMap();
 const vio = 'IntersectionObserver' in window ? new IntersectionObserver(es => es.forEach(e => visible.set(e.target, e.isIntersecting))) : null;
 const watch = el => { visible.set(el, true); vio && vio.observe(el); };
+/* круглый «штамп», нарисованный один раз: копировать картинку дешевле, чем каждый кадр строить круг или градиент.
+   soft — мягкое пятно от цвета к прозрачности, иначе сплошной круг */
+const sprite = (rgb, soft, n) => {
+  const c = document.createElement('canvas'); c.width = c.height = n;
+  const x = c.getContext('2d');
+  if (soft) { const g = x.createRadialGradient(n / 2, n / 2, 0, n / 2, n / 2, n / 2); g.addColorStop(0, `rgb(${rgb})`); g.addColorStop(1, `rgba(${rgb},0)`); x.fillStyle = g; x.fillRect(0, 0, n, n); }
+  else { x.fillStyle = `rgb(${rgb})`; x.beginPath(); x.arc(n / 2, n / 2, n / 2, 0, 7); x.fill(); }
+  return c;
+};
+/* не чаще 60 кадров в секунду: на экранах 120 Гц анимации не ускоряются и не тратят вдвое больше */
+const FRAME_MS = 15;
+
+/* ---------- Pause offscreen CSS loops ---------- */
+if ('IntersectionObserver' in window) {
+  const idleIO = new IntersectionObserver(es => es.forEach(e => e.target.classList.toggle('idle', !e.isIntersecting)));
+  $$('.ticker-clip, .proof-wrap, .qbar, .est, #tl').forEach(el => idleIO.observe(el));
+}
 
 /* ---------- Ambient embers ---------- */
+/* цвет искры зависит от остатка жизни: от красно-оранжевого к жёлтому, 8 заготовок вместо цвета на каждый кадр */
+const EMBER = Array.from({ length: 8 }, (_, k) => sprite(`255,${120 + (k + .5) / 8 * 100 | 0},40`, false, 16));
 function embers(cv, density) {
   let S = fitCanvas(cv); const P = [];
   new ResizeObserver(() => { S = fitCanvas(cv); }).observe(cv);
   watch(cv);
   const spawn = () => ({ x: Math.random() * S.w, y: S.h + 10, vx: (Math.random() - .5) * .3, vy: -(.3 + Math.random() * .9), r: .6 + Math.random() * 1.8, life: 1, dec: .002 + Math.random() * .004, ph: Math.random() * 6 });
   for (let i = 0; i < density; i++) { const p = spawn(); p.y = Math.random() * S.h; P.push(p); }
+  let prev = 0;
   const tick = t => {
     requestAnimationFrame(tick);
-    if (!visible.get(cv)) return;
+    if (!visible.get(cv) || t - prev < FRAME_MS) return;
+    prev = t;
     const { ctx, w, h } = S; ctx.clearRect(0, 0, w, h); ctx.globalCompositeOperation = 'lighter';
     P.forEach((p, i) => {
       p.x += p.vx + Math.sin(t / 900 + p.ph) * .25; p.y += p.vy; p.life -= p.dec;
       if (p.life <= 0 || p.y < -10) { P[i] = spawn(); return; }
-      const a = p.life * .8; ctx.fillStyle = `rgba(255,${120 + p.life * 100 | 0},40,${a})`;
-      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 7); ctx.fill();
+      ctx.globalAlpha = p.life * .8;
+      ctx.drawImage(EMBER[Math.min(EMBER.length - 1, p.life * EMBER.length | 0)], p.x - p.r, p.y - p.r, p.r * 2, p.r * 2);
     });
-    ctx.globalCompositeOperation = 'source-over';
+    ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
   };
   if (!RM) requestAnimationFrame(tick);
 }
@@ -1290,9 +1317,12 @@ const steelColor = T => {
   return st[st.length - 1][1];
 };
 const flames = [];
+/* языки пламени: три мягких пятна (жёлтое, оранжевое, красное) вместо нового градиента на каждый язык в каждом кадре */
+const FLAME = ['255,214,110', '255,140,40', '220,60,20'].map(c => sprite(c, true, 128));
 const beamCv = $('#beam'), chartCv = $('#chart');
 let B = fitCanvas(beamCv), C = fitCanvas(chartCv);
-new ResizeObserver(() => { B = fitCanvas(beamCv); C = fitCanvas(chartCv); if (RM) draw(performance.now()); }).observe(beamCv);
+new ResizeObserver(() => { B = fitCanvas(beamCv); C = fitCanvas(chartCv); chartBg = null; if (RM) draw(performance.now()); }).observe(beamCv);
+document.fonts && document.fonts.ready.then(() => { chartBg = null; if (RM) draw(performance.now()); });
 watch($('#ft'));
 
 function drawBeam(now, Tg, Ts) {
@@ -1310,12 +1340,10 @@ function drawBeam(now, Tg, Ts) {
   for (let i = flames.length - 1; i >= 0; i--) {
     const f = flames[i]; f.x += f.vx + Math.sin(now / 200 + i) * .4; f.y += f.vy; f.life -= f.dec;
     if (f.life <= 0) { flames.splice(i, 1); continue; }
-    const col = f.life > .7 ? '255,214,110' : f.life > .4 ? '255,140,40' : '220,60,20', rr = f.s * (.4 + f.life * .8);
-    const fg = ctx.createRadialGradient(f.x, f.y, 0, f.x, f.y, rr);
-    fg.addColorStop(0, `rgba(${col},${f.life * .5})`); fg.addColorStop(1, `rgba(${col},0)`);
-    ctx.fillStyle = fg; ctx.fillRect(f.x - rr, f.y - rr, rr * 2, rr * 2);
+    const img = f.life > .7 ? FLAME[0] : f.life > .4 ? FLAME[1] : FLAME[2], rr = f.s * (.4 + f.life * .8);
+    ctx.globalAlpha = f.life * .5; ctx.drawImage(img, f.x - rr, f.y - rr, rr * 2, rr * 2);
   }
-  ctx.globalCompositeOperation = 'source-over';
+  ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
 
   /* beam */
   const s = Math.min(w / 9.5, h / (w < 420 ? 10 : 8.2));
@@ -1349,10 +1377,19 @@ function drawBeam(now, Tg, Ts) {
   ctx.restore();
 }
 
-function drawChart(t) {
-  const { ctx, w, h } = C;
-  ctx.clearRect(0, 0, w, h);
-  const L = 40, R = 12, T = 10, Bm = 22, pw = w - L - R, ph = h - T - Bm, X = m => L + m / 120 * pw, Y = c => T + ph - c / 1100 * ph;
+const chartAxes = ({ w, h }) => {
+  const L = 40, R = 12, T = 10, Bm = 22, pw = w - L - R, ph = h - T - Bm;
+  return { L, R, Bm, X: m => L + m / 120 * pw, Y: c => T + ph - c / 1100 * ph };
+};
+const chartLine = (ctx, X, Y, fn, upto, col, wdt) => { ctx.strokeStyle = col; ctx.lineWidth = wdt; ctx.beginPath(); for (let m = 0; m <= upto; m += .5) { const x = X(m), y = Y(fn(m)); m ? ctx.lineTo(x, y) : ctx.moveTo(x, y); } ctx.stroke(); };
+/* сетка, подписи и бледная кривая газа не меняются: рисуем их один раз в отдельный холст, а в каждом кадре только копируем.
+   Сбрасывается при изменении размера и после загрузки шрифтов */
+let chartBg = null;
+function drawChartBg() {
+  const { ctx: main, w, h } = C, cv = document.createElement('canvas');
+  cv.width = main.canvas.width; cv.height = main.canvas.height;
+  const ctx = cv.getContext('2d'); ctx.setTransform(main.getTransform());
+  const { L, R, Bm, X, Y } = chartAxes(C);
   ctx.font = '500 11px Onest, Arial, sans-serif'; ctx.textBaseline = 'middle';
   ctx.strokeStyle = 'rgba(154,166,178,.13)'; ctx.lineWidth = 1; ctx.fillStyle = '#707E8C';
   [0, 500, 1000].forEach(c => { ctx.beginPath(); ctx.moveTo(L, Y(c)); ctx.lineTo(w - R, Y(c)); ctx.stroke(); ctx.textAlign = 'right'; ctx.fillText(c + '°', L - 6, Y(c)); });
@@ -1363,10 +1400,17 @@ function drawChart(t) {
   const lbl = '500 °C: сталь теряет прочность', lw = ctx.measureText(lbl).width;
   const lx = clamp((L + w - R) / 2, X(20) + lw / 2, w - R - lw / 2);
   ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; ctx.fillStyle = 'rgba(255,211,92,.85)'; ctx.fillText(lbl, lx, Y(500) - 3);
-  const line = (fn, upto, col, wdt) => { ctx.strokeStyle = col; ctx.lineWidth = wdt; ctx.beginPath(); for (let m = 0; m <= upto; m += .5) { const x = X(m), y = Y(fn(m)); m ? ctx.lineTo(x, y) : ctx.moveTo(x, y); } ctx.stroke(); };
-  line(TG, 120, 'rgba(255,84,36,.18)', 1.5);
-  line(TG, t, '#FF5424', 2.2);
-  line(m => steelAt(mode, m), t, mode === 'prot' ? '#ECE7DF' : '#FFD35C', 2.6);
+  chartLine(ctx, X, Y, TG, 120, 'rgba(255,84,36,.18)', 1.5);
+  chartBg = cv;
+}
+
+function drawChart(t) {
+  const { ctx, w, h } = C, { X, Y } = chartAxes(C);
+  if (!chartBg) drawChartBg();
+  ctx.clearRect(0, 0, w, h);
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(chartBg, 0, 0); ctx.restore();
+  chartLine(ctx, X, Y, TG, t, '#FF5424', 2.2);
+  chartLine(ctx, X, Y, m => steelAt(mode, m), t, mode === 'prot' ? '#ECE7DF' : '#FFD35C', 2.6);
   const dot = (x, y, c) => { ctx.fillStyle = c; ctx.beginPath(); ctx.arc(x, y, 4, 0, 7); ctx.fill(); };
   dot(X(t), Y(TG(t)), '#FF5424'); dot(X(t), Y(steelAt(mode, t)), mode === 'prot' ? '#ECE7DF' : '#FFD35C');
 }
@@ -1386,6 +1430,7 @@ function draw(now) {
 }
 function loop(now) {
   requestAnimationFrame(loop);
+  if (now - last < FRAME_MS) return;
   const dt = clamp((now - last) / 1000, 0, .05); last = now;
   if (!visible.get($('#ft'))) return;
   const M = MODE[mode];
