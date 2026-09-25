@@ -1,3 +1,6 @@
+<!doctype html>
+<html lang="ru">
+<meta charset="utf-8">
 <title>Огнезащита Строй Аспект</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1352,7 +1355,10 @@ function drawChart(t) {
   ctx.textAlign = 'center'; ctx.textBaseline = 'top';
   [0, 30, 60, 90, 120].forEach(m => ctx.fillText(m === 120 ? '120 мин' : m, clamp(X(m), L + 6, w - R - 22), h - Bm + 6));
   ctx.setLineDash([5, 4]); ctx.strokeStyle = 'rgba(255,211,92,.55)'; ctx.beginPath(); ctx.moveTo(L, Y(500)); ctx.lineTo(w - R, Y(500)); ctx.stroke(); ctx.setLineDash([]);
-  ctx.textAlign = 'left'; ctx.textBaseline = 'bottom'; ctx.fillStyle = 'rgba(255,211,92,.85)'; ctx.fillText('500 °C: сталь теряет прочность', L + 6, Y(500) - 3);
+  /* подпись по центру графика, но правее 20-й минуты: левее её пересекают кривые газа и стали без защиты */
+  const lbl = '500 °C: сталь теряет прочность', lw = ctx.measureText(lbl).width;
+  const lx = clamp((L + w - R) / 2, X(20) + lw / 2, w - R - lw / 2);
+  ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; ctx.fillStyle = 'rgba(255,211,92,.85)'; ctx.fillText(lbl, lx, Y(500) - 3);
   const line = (fn, upto, col, wdt) => { ctx.strokeStyle = col; ctx.lineWidth = wdt; ctx.beginPath(); for (let m = 0; m <= upto; m += .5) { const x = X(m), y = Y(fn(m)); m ? ctx.lineTo(x, y) : ctx.moveTo(x, y); } ctx.stroke(); };
   line(TG, 120, 'rgba(255,84,36,.18)', 1.5);
   line(TG, t, '#FF5424', 2.2);
